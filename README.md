@@ -1,0 +1,2 @@
+# wpudisabler
+Disable WordPress features
