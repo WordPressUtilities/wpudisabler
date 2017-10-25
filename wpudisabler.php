@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Disabler
 Description: Disable WordPress features
-Version: 0.2.0
+Version: 0.3.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -30,6 +30,9 @@ class WPUDisabler {
         }
         if (apply_filters('wpudisabler__disable_wp_api', false)) {
             $this->disable_wp_api();
+        }
+        if (apply_filters('wpudisabler__disable_wp_oembed', false)) {
+            $this->disable_wp_oembed();
         }
     }
 
@@ -104,8 +107,25 @@ class WPUDisabler {
         // WP-API version 2.x
         add_filter('rest_enabled', '__return_false');
         add_filter('rest_jsonp_enabled', '__return_false');
+
+
+    }
+    /* ----------------------------------------------------------
+      Disable WP Oembed
+    ---------------------------------------------------------- */
+
+    public function disable_wp_oembed() {
+
+        /* Header items */
+        remove_action( 'wp_head', 'wp_oembed_add_host_js' );
+        remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
+
+        /* REST API route */
+        remove_action( 'rest_api_init', 'wp_oembed_register_route' );
+
     }
 
 }
 
 $WPUDisabler = new WPUDisabler();
+
