@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Disabler
 Description: Disable WordPress features
-Version: 0.3.0
+Version: 0.4.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -16,7 +16,6 @@ class WPUDisabler {
     }
 
     public function plugins_loaded() {
-
         load_plugin_textdomain('wpudisabler', false, dirname(plugin_basename(__FILE__)) . '/lang/');
 
         if (apply_filters('wpudisabler__disable_author_page', false)) {
@@ -100,6 +99,11 @@ class WPUDisabler {
 
     public function disable_wp_api() {
 
+        // XML RPC
+        add_filter('xmlrpc_enabled', '__return_false');
+        remove_action('wp_head', 'rsd_link');
+        remove_action('xmlrpc_rsd_apis', 'rest_output_rsd');
+
         // WP-API version 1.x
         add_filter('json_enabled', '__return_false');
         add_filter('json_jsonp_enabled', '__return_false');
@@ -107,9 +111,27 @@ class WPUDisabler {
         // WP-API version 2.x
         add_filter('rest_enabled', '__return_false');
         add_filter('rest_jsonp_enabled', '__return_false');
-
+        remove_action('auth_cookie_bad_hash', 'rest_cookie_collect_status');
+        remove_action('auth_cookie_bad_username', 'rest_cookie_collect_status');
+        remove_action('auth_cookie_expired', 'rest_cookie_collect_status');
+        remove_action('auth_cookie_malformed', 'rest_cookie_collect_status');
+        remove_action('auth_cookie_valid', 'rest_cookie_collect_status');
+        remove_action('init', 'rest_api_init');
+        remove_action('parse_request', 'rest_api_loaded');
+        remove_action('template_redirect', 'rest_output_link_header', 11);
+        remove_action('wp_head', 'rest_output_link_wp_head', 10);
+        add_filter('rest_authentication_errors', array(&$this, 'rest_authentication_errors'));
 
     }
+
+    public function rest_authentication_errors($access) {
+        if (!is_user_logged_in()) {
+            return new WP_Error('rest_cannot_access', __('Nope'), array('status' => rest_authorization_required_code()));
+        }
+
+        return $access;
+    }
+
     /* ----------------------------------------------------------
       Disable WP Oembed
     ---------------------------------------------------------- */
@@ -117,15 +139,14 @@ class WPUDisabler {
     public function disable_wp_oembed() {
 
         /* Header items */
-        remove_action( 'wp_head', 'wp_oembed_add_host_js' );
-        remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
+        remove_action('wp_head', 'wp_oembed_add_host_js');
+        remove_action('wp_head', 'wp_oembed_add_discovery_links');
 
         /* REST API route */
-        remove_action( 'rest_api_init', 'wp_oembed_register_route' );
+        remove_action('rest_api_init', 'wp_oembed_register_route');
 
     }
 
 }
 
 $WPUDisabler = new WPUDisabler();
-
