@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WPU Import Instagram\n"
-"POT-Creation-Date: 2017-06-04 22:14+0200\n"
+"POT-Creation-Date: 2018-08-15 21:39+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Darklg <darklg.blog@gmail.com>\n"
 "Language-Team: \n"
@@ -15,7 +15,13 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: ../.\n"
 
-#: .././wpudisabler.php:73
+#: .././wpudisabler.php:77
 #, php-format
 msgid "No feed available, please visit our <a href=\"%s\">homepage</a>!"
-msgstr "Les flux sont désactivés. Merci de visiter notre <a href=\"%s\">page d'accueil</a> !"
+msgstr ""
+"Les flux sont désactivés. Merci de visiter notre <a href=\"%s\">page "
+"d'accueil</a> !"
+
+#: .././wpudisabler.php:131
+msgid "Nope"
+msgstr "Nope"

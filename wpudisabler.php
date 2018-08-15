@@ -69,6 +69,8 @@ class WPUDisabler {
         add_action('do_feed_atom', array(&$this, 'disable_feed'), 1);
         add_action('do_feed_rss2_comments', array(&$this, 'disable_feed'), 1);
         add_action('do_feed_atom_comments', array(&$this, 'disable_feed'), 1);
+        add_action('feed_links_show_posts_feed', '__return_false', 1);
+        add_action('feed_links_show_comments_feed', '__return_false', 1);
     }
 
     public function disable_feed() {
@@ -126,7 +128,7 @@ class WPUDisabler {
 
     public function rest_authentication_errors($access) {
         if (!is_user_logged_in()) {
-            return new WP_Error('rest_cannot_access', __('Nope'), array('status' => rest_authorization_required_code()));
+            return new WP_Error('rest_cannot_access', __('Nope', 'wpudisabler'), array('status' => rest_authorization_required_code()));
         }
 
         return $access;
