@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Disabler
 Description: Disable WordPress features
-Version: 0.4.0
+Version: 0.4.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -71,6 +71,7 @@ class WPUDisabler {
         add_action('do_feed_atom_comments', array(&$this, 'disable_feed'), 1);
         add_action('feed_links_show_posts_feed', '__return_false', 1);
         add_action('feed_links_show_comments_feed', '__return_false', 1);
+        remove_action('wp_head', 'feed_links_extra', 3);
     }
 
     public function disable_feed() {
