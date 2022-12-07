@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Disabler
 Description: Disable WordPress features
-Version: 0.4.2
+Version: 0.5.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -29,6 +29,9 @@ class WPUDisabler {
         }
         if (apply_filters('wpudisabler__disable_wp_api', false)) {
             $this->disable_wp_api();
+        }
+        if (apply_filters('wpudisabler__disable_wp_api__logged_in', false)) {
+            $this->disable_wp_api__logged_in();
         }
         if (apply_filters('wpudisabler__disable_wp_oembed', false)) {
             $this->disable_wp_oembed();
@@ -133,6 +136,40 @@ class WPUDisabler {
         }
 
         return $access;
+    }
+
+    /* Only for logged in users
+    -------------------------- */
+
+    function disable_wp_api__logged_in() {
+        if (is_user_logged_in() || current_user_can('remove_users')) {
+            return;
+        }
+        add_action('wp', array(&$this, 'disable_wp_api__logged_in__wp_head'), 999);
+        add_filter('rest_authentication_errors', array(&$this, 'disable_wp_api__logged_in__rest_authentication_errors'));
+    }
+
+    function disable_wp_api__logged_in__rest_authentication_errors($result) {
+        if (!empty($result)) {
+            return $result;
+        }
+        if (!is_user_logged_in()) {
+            return new WP_Error('rest_not_logged_in', 'You are not currently logged in.', array(
+                'status' => 401
+            ));
+        }
+        if (!current_user_can('remove_users')) {
+            return new WP_Error('rest_not_admin', 'You are not an administrator.', array(
+                'status' => 401
+            ));
+        }
+        return $result;
+    }
+
+    function disable_wp_api__logged_in__wp_head() {
+        remove_action('template_redirect', 'rest_output_link_header', 11);
+        remove_action('xmlrpc_rsd_apis', 'rest_output_rsd');
+        remove_action('wp_head', 'rest_output_link_wp_head', 10);
     }
 
     /* ----------------------------------------------------------
