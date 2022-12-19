@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Disabler
 Description: Disable WordPress features
-Version: 0.5.0
+Version: 0.5.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -142,7 +142,7 @@ class WPUDisabler {
     -------------------------- */
 
     function disable_wp_api__logged_in() {
-        if (is_user_logged_in() || current_user_can('remove_users')) {
+        if (is_user_logged_in() && current_user_can('remove_users')) {
             return;
         }
         add_action('wp', array(&$this, 'disable_wp_api__logged_in__wp_head'), 999);
