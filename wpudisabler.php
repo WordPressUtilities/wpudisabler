@@ -3,21 +3,36 @@
 /*
 Plugin Name: WPU Disabler
 Description: Disable WordPress features
-Version: 0.5.1
+Plugin URI: https://github.com/wordPressUtilities/wpudisabler
+Update URI: https://github.com/wordPressUtilities/wpudisabler
+Version: 0.6.0
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
-License URI: http://opensource.org/licenses/MIT
+License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
+    private $plugin_version = '0.6.0';
     public function __construct() {
         add_action('plugins_loaded', array(&$this, 'plugins_loaded'));
     }
 
     public function plugins_loaded() {
-        load_plugin_textdomain('wpudisabler', false, dirname(plugin_basename(__FILE__)) . '/lang/');
+        # TRANSLATION
+        if (!load_plugin_textdomain('wpudisabler', false, dirname(plugin_basename(__FILE__)) . '/lang/')) {
+            load_muplugin_textdomain('wpudisabler', dirname(plugin_basename(__FILE__)) . '/lang/');
+        }
+        $this->plugin_description = __('Disable WordPress features', 'wpudisabler');
 
+        /* Base UPDATE */
+        include dirname( __FILE__ ) . '/inc/WPUBaseUpdate/WPUBaseUpdate.php';
+        $this->settings_update = new \wpudisabler\WPUBaseUpdate(
+            'WordPressUtilities',
+            'wpudisabler',
+            $this->plugin_version);
+
+        /* Filters */
         if (apply_filters('wpudisabler__disable_author_page', false)) {
             $this->disable_author_page();
         }
