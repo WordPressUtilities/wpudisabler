@@ -5,7 +5,7 @@ Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.6.0
+Version: 0.6.1
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -13,7 +13,9 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.6.0';
+    private $plugin_version = '0.6.1';
+    private $plugin_description;
+    private $settings_update;
     public function __construct() {
         add_action('plugins_loaded', array(&$this, 'plugins_loaded'));
     }
