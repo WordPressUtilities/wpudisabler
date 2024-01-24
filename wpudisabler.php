@@ -1,19 +1,24 @@
 <?php
+defined('ABSPATH') || die;
 
 /*
 Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.6.1
+Version: 0.6.2
 Author: Darklg
 Author URI: https://darklg.me/
+Text Domain: wpudisabler
+Domain Path: /lang
+Requires at least: 6.2
+Requires PHP: 8.0
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.6.1';
+    private $plugin_version = '0.6.2';
     private $plugin_description;
     private $settings_update;
     public function __construct() {
@@ -28,7 +33,7 @@ class WPUDisabler {
         $this->plugin_description = __('Disable WordPress features', 'wpudisabler');
 
         /* Base UPDATE */
-        include dirname( __FILE__ ) . '/inc/WPUBaseUpdate/WPUBaseUpdate.php';
+        include __DIR__ . '/inc/WPUBaseUpdate/WPUBaseUpdate.php';
         $this->settings_update = new \wpudisabler\WPUBaseUpdate(
             'WordPressUtilities',
             'wpudisabler',

@@ -1,6 +1,8 @@
 # WPU Disabler
 Disable WordPress features
 
+[![PHP workflow](https://github.com/WordPressUtilities/wpudisabler/actions/workflows/php.yml/badge.svg 'PHP workflow')](https://github.com/WordPressUtilities/wpudisabler/actions)
+
 Filter list :
 ---
 
