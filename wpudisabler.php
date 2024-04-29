@@ -6,21 +6,23 @@ Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.6.2
+Version: 0.6.3
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpudisabler
 Domain Path: /lang
 Requires at least: 6.2
 Requires PHP: 8.0
+Network: Optional
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.6.2';
+    private $plugin_version = '0.6.3';
     private $plugin_description;
     private $settings_update;
+    private $disable_wp_api_user_level;
     public function __construct() {
         add_action('plugins_loaded', array(&$this, 'plugins_loaded'));
     }
@@ -33,7 +35,7 @@ class WPUDisabler {
         $this->plugin_description = __('Disable WordPress features', 'wpudisabler');
 
         /* Base UPDATE */
-        include __DIR__ . '/inc/WPUBaseUpdate/WPUBaseUpdate.php';
+        require_once __DIR__ . '/inc/WPUBaseUpdate/WPUBaseUpdate.php';
         $this->settings_update = new \wpudisabler\WPUBaseUpdate(
             'WordPressUtilities',
             'wpudisabler',
@@ -49,6 +51,8 @@ class WPUDisabler {
         if (apply_filters('wpudisabler__disable_plugin_deactivation', false)) {
             $this->disable_plugin_deactivation();
         }
+
+        $this->disable_wp_api_user_level = apply_filters('wpudisabler__disable_wp_api_user_level', 'remove_users');
         if (apply_filters('wpudisabler__disable_wp_api', false)) {
             $this->disable_wp_api();
         }
@@ -164,7 +168,7 @@ class WPUDisabler {
     -------------------------- */
 
     function disable_wp_api__logged_in() {
-        if (is_user_logged_in() && current_user_can('remove_users')) {
+        if (is_user_logged_in() && current_user_can($this->disable_wp_api_user_level)) {
             return;
         }
         add_action('wp', array(&$this, 'disable_wp_api__logged_in__wp_head'), 999);
@@ -180,7 +184,7 @@ class WPUDisabler {
                 'status' => 401
             ));
         }
-        if (!current_user_can('remove_users')) {
+        if (!current_user_can($this->disable_wp_api_user_level)) {
             return new WP_Error('rest_not_admin', 'You are not an administrator.', array(
                 'status' => 401
             ));

@@ -1,0 +1,2 @@
+<?php
+return ['domain'=>NULL,'plural-forms'=>NULL,'messages'=>['Disable WordPress features'=>'Désactiver des fonctionnalités WordPress','No feed available, please visit our <a href="%s">homepage</a>!'=>'Les flux sont désactivés. Merci de visiter notre <a href="%s">page d\'accueil</a> !','Nope'=>'Nope'],'language'=>'fr_FR','x-generator'=>'Poedit 3.2.2'];
