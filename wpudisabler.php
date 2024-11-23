@@ -6,7 +6,7 @@ Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.6.3
+Version: 0.6.4
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpudisabler
@@ -19,20 +19,24 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.6.3';
+    private $plugin_version = '0.6.4';
     private $plugin_description;
     private $settings_update;
     private $disable_wp_api_user_level;
     public function __construct() {
         add_action('plugins_loaded', array(&$this, 'plugins_loaded'));
+        add_action('after_setup_theme', array(&$this, 'after_setup_theme'));
     }
 
-    public function plugins_loaded() {
-        # TRANSLATION
+    # TRANSLATION
+    public function after_setup_theme() {
         if (!load_plugin_textdomain('wpudisabler', false, dirname(plugin_basename(__FILE__)) . '/lang/')) {
             load_muplugin_textdomain('wpudisabler', dirname(plugin_basename(__FILE__)) . '/lang/');
         }
         $this->plugin_description = __('Disable WordPress features', 'wpudisabler');
+
+    }
+    public function plugins_loaded() {
 
         /* Base UPDATE */
         require_once __DIR__ . '/inc/WPUBaseUpdate/WPUBaseUpdate.php';
@@ -167,7 +171,7 @@ class WPUDisabler {
     /* Only for logged in users
     -------------------------- */
 
-    function disable_wp_api__logged_in() {
+    public function disable_wp_api__logged_in() {
         if (is_user_logged_in() && current_user_can($this->disable_wp_api_user_level)) {
             return;
         }
@@ -175,7 +179,7 @@ class WPUDisabler {
         add_filter('rest_authentication_errors', array(&$this, 'disable_wp_api__logged_in__rest_authentication_errors'));
     }
 
-    function disable_wp_api__logged_in__rest_authentication_errors($result) {
+    public function disable_wp_api__logged_in__rest_authentication_errors($result) {
         if (!empty($result)) {
             return $result;
         }
@@ -192,7 +196,7 @@ class WPUDisabler {
         return $result;
     }
 
-    function disable_wp_api__logged_in__wp_head() {
+    public function disable_wp_api__logged_in__wp_head() {
         remove_action('template_redirect', 'rest_output_link_header', 11);
         remove_action('xmlrpc_rsd_apis', 'rest_output_rsd');
         remove_action('wp_head', 'rest_output_link_wp_head', 10);
