@@ -6,7 +6,7 @@ Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.6.6
+Version: 0.7.0
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpudisabler
@@ -19,17 +19,17 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.6.6';
+    private $plugin_version = '0.7.0';
     private $plugin_description;
     private $settings_update;
     private $disable_wp_api_user_level;
     public function __construct() {
         add_action('plugins_loaded', array(&$this, 'plugins_loaded'));
-        add_action('after_setup_theme', array(&$this, 'after_setup_theme'));
+        add_action('init', array(&$this, 'load_translation'));
     }
 
     # TRANSLATION
-    public function after_setup_theme() {
+    public function load_translation() {
         $lang_dir = dirname(plugin_basename(__FILE__)) . '/lang/';
         if (strpos(__DIR__, 'mu-plugins') !== false) {
             load_muplugin_textdomain('wpudisabler', $lang_dir);
@@ -79,6 +79,9 @@ class WPUDisabler {
         add_filter('template_redirect', array(&$this, 'author_page'), 50);
         add_filter('author_link', array(&$this, 'get_the_author_url'), 50, 1);
         add_filter('get_the_author_url', array(&$this, 'get_the_author_url'), 50, 1);
+        add_filter('wp_sitemaps_enabled', array(&$this, 'disable_users_sitemap__wp_sitemaps_enabled'), 10, 1);
+        add_filter('wp_sitemaps_add_provider', array(&$this, 'disable_users_sitemap__wp_sitemaps_add_provider'), 10, 2);
+
     }
 
     public function author_page($template) {
@@ -91,6 +94,21 @@ class WPUDisabler {
 
     public function get_the_author_url($url) {
         return home_url();
+    }
+
+    public function disable_users_sitemap__wp_sitemaps_enabled($is_enabled) {
+        global $wp_query;
+        if (is_object($wp_query) && isset($wp_query->query_vars['sitemap']) && $wp_query->query_vars['sitemap'] == 'users') {
+            return false;
+        }
+        return $is_enabled;
+    }
+
+    public function disable_users_sitemap__wp_sitemaps_add_provider($provider, $name) {
+        if ($name == 'users') {
+            return false;
+        }
+        return $provider;
     }
 
     /* ----------------------------------------------------------
