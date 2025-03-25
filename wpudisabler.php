@@ -6,7 +6,7 @@ Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.7.0
+Version: 0.7.1
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpudisabler
@@ -19,7 +19,7 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.7.0';
+    private $plugin_version = '0.7.1';
     private $plugin_description;
     private $settings_update;
     private $disable_wp_api_user_level;
@@ -204,6 +204,15 @@ class WPUDisabler {
         if (!empty($result)) {
             return $result;
         }
+
+        $allowed_routes = apply_filters('wpudisabler__disable_wp_api__logged_in__allowed_routes', array());
+        $current_route = $_SERVER['REQUEST_URI'];
+        foreach ($allowed_routes as $allowed_route) {
+            if (strpos($current_route, $allowed_route) !== false) {
+                return $result;
+            }
+        }
+
         if (!is_user_logged_in()) {
             return new WP_Error('rest_not_logged_in', 'You are not currently logged in.', array(
                 'status' => 401
