@@ -6,7 +6,7 @@ Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.7.1
+Version: 0.8.0
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpudisabler
@@ -19,10 +19,9 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.7.1';
-    private $plugin_description;
-    private $settings_update;
+    private $plugin_version = '0.8.0';
     private $disable_wp_api_user_level;
+    private $author_has_post_cache = array();
     public function __construct() {
         add_action('plugins_loaded', array(&$this, 'plugins_loaded'));
         add_action('init', array(&$this, 'load_translation'));
@@ -36,14 +35,15 @@ class WPUDisabler {
         } else {
             load_plugin_textdomain('wpudisabler', false, $lang_dir);
         }
-        $this->plugin_description = __('Disable WordPress features', 'wpudisabler');
+        /* Translate description */
+        __('Disable WordPress features', 'wpudisabler');
     }
 
     public function plugins_loaded() {
 
         /* Base UPDATE */
         require_once __DIR__ . '/inc/WPUBaseUpdate/WPUBaseUpdate.php';
-        $this->settings_update = new \wpudisabler\WPUBaseUpdate(
+        new \wpudisabler\WPUBaseUpdate(
             'WordPressUtilities',
             'wpudisabler',
             $this->plugin_version);
@@ -51,6 +51,8 @@ class WPUDisabler {
         /* Filters */
         if (apply_filters('wpudisabler__disable_author_page', false)) {
             $this->disable_author_page();
+        } elseif (apply_filters('wpudisabler__disable_author_page_if_empty', false)) {
+            $this->disable_author_page_if_empty();
         }
         if (apply_filters('wpudisabler__disable_feeds', false)) {
             $this->disable_feeds();
@@ -59,7 +61,7 @@ class WPUDisabler {
             $this->disable_plugin_deactivation();
         }
 
-        $this->disable_wp_api_user_level = apply_filters('wpudisabler__disable_wp_api_user_level', 'remove_users');
+        $this->disable_wp_api_user_level = apply_filters('wpudisabler__disable_wp_api_user_level', 'c');
         if (apply_filters('wpudisabler__disable_wp_api', false)) {
             $this->disable_wp_api();
         }
@@ -109,6 +111,67 @@ class WPUDisabler {
             return false;
         }
         return $provider;
+    }
+
+    /* ----------------------------------------------------------
+      Disable author page if empty (no published post)
+    ---------------------------------------------------------- */
+
+    public function disable_author_page_if_empty() {
+        add_action('template_redirect', array(&$this, 'author_page_if_empty'), 50);
+        add_filter('author_link', array(&$this, 'author_link_if_empty'), 50, 2);
+        add_filter('get_the_author_url', array(&$this, 'author_link_if_empty'), 50, 2);
+        add_filter('wp_sitemaps_users_query_args', array(&$this, 'sitemaps_users_query_args_if_empty'));
+    }
+
+    public function author_page_if_empty() {
+        if (!is_author()) {
+            return;
+        }
+        $author_id = (int) get_queried_object_id();
+        if ($this->author_has_published_post($author_id)) {
+            return;
+        }
+        global $wp_query;
+        $wp_query->set_404();
+        status_header(404);
+        nocache_headers();
+    }
+
+    public function author_link_if_empty($url, $author_id = 0) {
+        $author_id = (int) $author_id;
+        if (!$author_id) {
+            return $url;
+        }
+        if ($this->author_has_published_post($author_id)) {
+            return $url;
+        }
+        return home_url();
+    }
+
+    public function sitemaps_users_query_args_if_empty($args) {
+        $args['has_published_posts'] = array('post');
+        return $args;
+    }
+
+    public function author_has_published_post($user_id) {
+        $user_id = (int) $user_id;
+        if (!$user_id) {
+            return false;
+        }
+        if (isset($this->author_has_post_cache[$user_id])) {
+            return $this->author_has_post_cache[$user_id];
+        }
+        $posts = get_posts(array(
+            'author' => $user_id,
+            'post_type' => 'post',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'no_found_rows' => true
+        ));
+        $this->author_has_post_cache[$user_id] = !empty($posts);
+        return $this->author_has_post_cache[$user_id];
     }
 
     /* ----------------------------------------------------------
@@ -214,12 +277,12 @@ class WPUDisabler {
         }
 
         if (!is_user_logged_in()) {
-            return new WP_Error('rest_not_logged_in', 'You are not currently logged in.', array(
+            return new WP_Error('rest_not_logged_in', __('You are not currently logged in.', 'wpudisabler'), array(
                 'status' => 401
             ));
         }
         if (!current_user_can($this->disable_wp_api_user_level)) {
-            return new WP_Error('rest_not_admin', 'You are not an administrator.', array(
+            return new WP_Error('rest_not_admin', __('You are not an administrator.', 'wpudisabler'), array(
                 'status' => 401
             ));
         }
