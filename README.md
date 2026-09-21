@@ -26,4 +26,8 @@ add_filter('wpudisabler__disable_author_page', '__return_true');
 /* Disable feeds */
 add_filter('wpudisabler__disable_feeds', '__return_true');
 
+/* Disable comment feeds : remove <link> tags from head,
+   direct URLs are redirected (301) to the related post, or to the home page */
+add_filter('wpudisabler__disable_comment_feeds', '__return_true');
+
 ```

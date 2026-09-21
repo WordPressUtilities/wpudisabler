@@ -6,7 +6,7 @@ Plugin Name: WPU Disabler
 Description: Disable WordPress features
 Plugin URI: https://github.com/wordPressUtilities/wpudisabler
 Update URI: https://github.com/wordPressUtilities/wpudisabler
-Version: 0.8.1
+Version: 0.9.0
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpudisabler
@@ -19,7 +19,7 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUDisabler {
-    private $plugin_version = '0.8.1';
+    private $plugin_version = '0.9.0';
     private $disable_wp_api_user_level;
     private $author_has_post_cache = array();
     public function __construct() {
@@ -56,6 +56,9 @@ class WPUDisabler {
         }
         if (apply_filters('wpudisabler__disable_feeds', false)) {
             $this->disable_feeds();
+        }
+        if (apply_filters('wpudisabler__disable_comment_feeds', false)) {
+            $this->disable_comment_feeds();
         }
         if (apply_filters('wpudisabler__disable_plugin_deactivation', false)) {
             $this->disable_plugin_deactivation();
@@ -193,6 +196,43 @@ class WPUDisabler {
 
     public function disable_feed() {
         wp_die(sprintf(__('No feed available, please visit our <a href="%s">homepage</a>!', 'wpudisabler'), get_bloginfo('url')));
+    }
+
+    /* ----------------------------------------------------------
+      Disable comment feeds
+    ---------------------------------------------------------- */
+
+    public function disable_comment_feeds() {
+        /* Remove <link> tags in head : site-wide feed & per-post feed */
+        add_filter('feed_links_show_comments_feed', '__return_false');
+        add_filter('feed_links_extra_show_post_comments_feed', '__return_false');
+        /* Redirect direct access : fires before do_feed() in template-loader,
+           priority 9 to run before redirect_canonical */
+        add_action('template_redirect', array(&$this, 'redirect_comment_feed'), 9);
+    }
+
+    public function redirect_comment_feed() {
+        $path = isset($_SERVER['REQUEST_URI']) ? strtok($_SERVER['REQUEST_URI'], '?') : '';
+        $parent_path = preg_replace('#/feed(/(feed|rdf|rss|rss2|atom))?/?$#', '/', $path);
+        $is_feed_url = ($parent_path !== $path);
+
+        /* Post types without feed rewrite rules 404 instead of being a feed */
+        if (!is_comment_feed() && !(is_404() && $is_feed_url)) {
+            return;
+        }
+
+        $queried_object = get_queried_object();
+        if ($queried_object instanceof WP_Post) {
+            wp_safe_redirect(get_permalink($queried_object), 301);
+            exit;
+        }
+
+        $post_id = $is_feed_url ? url_to_postid($parent_path) : 0;
+        if (!$post_id && is_404()) {
+            return;
+        }
+        wp_safe_redirect($post_id ? get_permalink($post_id) : home_url(), 301);
+        exit;
     }
 
     /* ----------------------------------------------------------
